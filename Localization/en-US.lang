@@ -1,14 +1,14 @@
-# How to reference the name {$Mods.ForgeMaster.NPCName.GnomeWordsmith}
+# How to reference the name {$Mods.ForgeMaster.NPCName.GnomeTownie}
 
-# Gnome Wordsmith NPC
-NPCName.GnomeWordsmith=Gnome Wordsmith
+# Gnome Wordsmith Townie
+GnomeTownie.NPCName=Gnome Wordsmith
 
-NPCChat.GnomeWordsmith.Rand0=I ain't much for talking. What do you want?
-NPCChat.GnomeWordsmith.Rand1=...
-NPCChat.GnomeWordsmith.Rand2=Things used to be quieter around here.
-NPCChat.GnomeWordsmith.GoblinTinkerer=Don't let {0} touch your gear. They're just scratching the surface.
-NPCChat.GnomeWordsmith.Steampunker={0}'s work is impressive... For a youngling.
-NPCChat.GnomeWordsmith.BloodMoon=The blood moon has put everyone on edge. Stay on your toes.
+GnomeTownie.NPCChat.Rand0=I ain't much for talking. What do you want?
+GnomeTownie.NPCChat.Rand1=...
+GnomeTownie.NPCChat.Rand2=Things used to be quieter around here.
+GnomeTownie.NPCChat.GoblinTinkerer=Don't let {0} touch your gear. They're just scratching the surface.
+GnomeTownie.NPCChat.Steampunker={0}'s work is impressive... For a youngling.
+GnomeTownie.NPCChat.BloodMoon=The blood moon has put everyone on edge. Stay on your toes.
 
 # UI Text
 ReforgeUI.ShopLabel=Smithable Prefixes

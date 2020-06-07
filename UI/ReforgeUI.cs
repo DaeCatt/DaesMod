@@ -6,8 +6,10 @@ using Terraria.Localization;
 using Terraria.UI;
 using Terraria.UI.Chat;
 
-namespace GnomeWordsmith.UI {
+namespace DaesMod.UI {
 	class ReforgeUI : UIState {
+		internal static string ValueIDPrefix = $"Mods.{nameof(DaesMod)}.{nameof(ReforgeUI)}.NPCChat.";
+
 		public static bool visible = false;
 
 		public static Item lastItem = null;
@@ -15,7 +17,8 @@ namespace GnomeWordsmith.UI {
 		public static Item[] purchasableItems = new Item[15];
 		public static int purchasableItemsLength = 0;
 
-		public static byte[] accessoryPrefixes = {
+		// List of all the highest-stat accessory prefixes.
+		public static int[] accessoryPrefixes = {
 			PrefixID.Warding,
 			PrefixID.Arcane,
 			PrefixID.Lucky,
@@ -24,25 +27,34 @@ namespace GnomeWordsmith.UI {
 			PrefixID.Violent
 		};
 
-		public override void OnInitialize() {
+		public static int[] weaponPrefixes = {
+			// Melee
+			PrefixID.Legendary,
+			PrefixID.Godly,
+			
+			// Tools
+			PrefixID.Light,
+			PrefixID.Massive,
+			
+			// Ranged & Magic
+			PrefixID.Unreal,
+			PrefixID.Demonic,
+			PrefixID.Mythical,
+
+			// Summon
+			PrefixID.Ruthless
+		};
+
+		/*public override void OnInitialize() {
 			// We might want to use vanilla panels here, but for now do nothing.
-		}
+		}*/
 
-		private static void AddPurchaseableItemWithPrefix(Item item, byte prefix) {
-			if (item.prefix == prefix || purchasableItemsLength == 15) {
-				return;
-			}
-
-			Item clone = new Item();
-			clone.netDefaults(item.netID);
-			clone = clone.CloneWithModdedDataFrom(item);
-			clone.Prefix(prefix);
-
-			purchasableItems[purchasableItemsLength] = clone;
-			purchasableItemsLength++;
+		public static void ClearCurrentPrefixes() {
+			purchasableItemsLength = 0;
 		}
 
 		public static void UpdateCurrentPrefixesForItem(Item item) {
+			// Avoid re-calculating best prefixes if the item hasn't changed.
 			if (item == lastItem) {
 				return;
 			} else {
@@ -50,13 +62,37 @@ namespace GnomeWordsmith.UI {
 			}
 
 			purchasableItemsLength = 0;
-			if (item == null) {
+			if (item.IsAir)
 				return;
+
+			if (item.vanity)
+				return;
+
+			int[] prefixList = item.accessory ? accessoryPrefixes : weaponPrefixes;
+
+			foreach (int prefixID in prefixList) {
+				if (item.prefix == prefixID || purchasableItemsLength == 15) {
+					continue;
+				}
+
+				Item clone = new Item();
+				clone.netDefaults(item.netID);
+				clone = clone.CloneWithModdedDataFrom(item);
+				clone.Prefix(prefixID);
+				if (clone.prefix != prefixID) {
+					continue;
+				}
+
+				purchasableItems[purchasableItemsLength] = clone;
+				purchasableItemsLength++;
 			}
 
-			if (item.accessory) {
-				foreach (byte prefixID in accessoryPrefixes) {
-					AddPurchaseableItemWithPrefix(item, prefixID);
+			/**
+			 if (item.accessory) {
+				foreach (int prefixID in accessoryPrefixes) {
+					if (ItemLoader.AllowPrefix(item, prefixID)) {
+						AddPurchaseableItemWithPrefix(item, prefixID);
+					}
 				}
 			} else {
 				// Add Godly or Demonic
@@ -67,15 +103,14 @@ namespace GnomeWordsmith.UI {
 				}
 
 				if (item.axe > 0 || item.hammer > 0 || item.pick > 0) {
-					// Tools
+					// Skip drills
 					if (!item.channel) {
-						// Skip drills
 						AddPurchaseableItemWithPrefix(item, PrefixID.Light);
 						AddPurchaseableItemWithPrefix(item, PrefixID.Massive);
 					}
 				} else if (item.melee) {
+					// Skip spears
 					if (!item.noMelee) {
-						// Skip spears
 						AddPurchaseableItemWithPrefix(item, PrefixID.Legendary);
 					}
 				} else if (item.ranged) {
@@ -89,41 +124,56 @@ namespace GnomeWordsmith.UI {
 					AddPurchaseableItemWithPrefix(item, PrefixID.Mythical);
 				}
 			}
+			*/
 
 			// TODO: Support mod prefixes.
 		}
 
+		public static void ShowInterface() {
+			// Remove any NPC Chat Box
+			Main.npcChatText = "";
+
+			// Open the player inventory and hide the crafting menu
+			Main.playerInventory = true;
+			Main.HidePlayerCraftingMenu = true;
+
+			// Play the menu opening sound
+			Main.PlaySound(SoundID.MenuTick);
+			visible = true;
+		}
+
+		public static void HideInterface(DaesPlayer player) {
+			// Drop item from reforge item slot
+			player.DropReforgeItem();
+
+			// Clear list of purchasable items
+			ClearCurrentPrefixes();
+
+			// Allow the crafting menu to be shown again
+			Main.HidePlayerCraftingMenu = false;
+			visible = false;
+		}
+
 		public override void Draw(SpriteBatch spriteBatch) {
-			base.Draw(spriteBatch);
-			GnomeWordsmithPlayer gnomeWordsmithPlayer = Main.LocalPlayer.GetModPlayer<GnomeWordsmithPlayer>();
+			// Hide the crafting menu
+			Main.HidePlayerCraftingMenu = true;
 
-			// Make sure the inventory is still open
+			// Get reference to current player
+			DaesPlayer player = Main.LocalPlayer.GetModPlayer<DaesPlayer>();
+
+			/**
+			 * If the player:
+			 * - has closed their inventory
+			 * - has opened a chest
+			 * - has opened another npcs shop
+			 * - is no longer in range of the gnome
+			 * Close the reforge ui.
+			 */
+
 			if (!Main.playerInventory || Main.player[Main.myPlayer].chest != -1 || Main.npcShop != 0 || Main.player[Main.myPlayer].talkNPC == -1) {
-				visible = false;
-
-				// Drop item if closed
-				if (!gnomeWordsmithPlayer.ReforgeItem.IsAir) {
-					Main.LocalPlayer.QuickSpawnClonedItem(gnomeWordsmithPlayer.ReforgeItem, gnomeWordsmithPlayer.ReforgeItem.stack);
-					gnomeWordsmithPlayer.ReforgeItem.TurnToAir();
-				}
-
-				// Make sure our player instance knows we don't have an item
-				gnomeWordsmithPlayer.hasItem = false;
-
-				// Remove list of purchasable items
-				UpdateCurrentPrefixesForItem(null);
-
-				// Let PlayerCraftingMenu show again
-				Main.HidePlayerCraftingMenu = false;
-
+				HideInterface(player);
 				return;
 			}
-
-			Item[] slot = new Item[1];
-			slot[0] = gnomeWordsmithPlayer.ReforgeItem;
-
-			// Hide crafting interface
-			Main.HidePlayerCraftingMenu = true;
 
 			/**
 			 * Create a point for where the mouse is. Used to check whether the
@@ -145,98 +195,86 @@ namespace GnomeWordsmith.UI {
 			if (slotRectangle.Contains(mousePoint)) {
 				Main.LocalPlayer.mouseInterface = true;
 				if (Main.mouseLeftRelease && Main.mouseLeft) {
-					/**
-					 * Check if we should attempt to swap items with the slot.
-					 * Item.Prefix(-3) checks if the item can be forged.
-					 *
-					 * This re-implements part of ItemSlot.LeftClick
-					 */
-					if (Main.mouseItem.type == 0 || Main.mouseItem.Prefix(-3)) {
-						Utils.Swap(ref slot[0], ref Main.mouseItem);
-						if (slot[0].type == 0 || slot[0].stack < 1) {
-							slot[0] = new Item();
-						}
+					// Item.Prefix(-3) checks whether an item can be reforged.
+					if (Main.mouseItem.IsAir || Main.mouseItem.Prefix(-3)) {
+						Utils.Swap(ref player.ReforgeItem, ref Main.mouseItem);
 
-						if (Main.mouseItem.type == 0 || Main.mouseItem.stack < 1) {
-							Main.mouseItem = new Item();
-						}
-
-						if (Main.mouseItem.type > 0 || slot[0].type > 0) {
+						if (!Main.mouseItem.IsAir || !player.ReforgeItem.IsAir) {
 							Main.PlaySound(SoundID.Grab);
 						}
 					}
 
-					gnomeWordsmithPlayer.hasItem = !slot[0].IsAir;
-					UpdateCurrentPrefixesForItem(gnomeWordsmithPlayer.hasItem ? slot[0] : null);
+					UpdateCurrentPrefixesForItem(player.ReforgeItem);
 				} else {
-					ItemSlot.MouseHover(slot, ItemSlot.Context.PrefixItem);
+					ItemSlot.MouseHover(new Item[] { player.ReforgeItem }, ItemSlot.Context.PrefixItem);
 				}
 			}
 
-			slot[0].newAndShiny = false;
-			ItemSlot.Draw(Main.spriteBatch, slot, ItemSlot.Context.PrefixItem, 0, new Vector2(xPosition, yPosition), default(Color));
-			gnomeWordsmithPlayer.ReforgeItem = slot[0];
-
-			// TODO: Inspect why these are unused.
-			// bool favorited = Main.reforgeItem.favorited;
-			// int stack = Main.reforgeItem.stack;
+			player.ReforgeItem.newAndShiny = false;
+			ItemSlot.Draw(Main.spriteBatch, new Item[] { player.ReforgeItem }, ItemSlot.Context.PrefixItem, 0, new Vector2(xPosition, yPosition), default);
 
 			// If there's no purchasable prefixes, stop drawing the interface.
-			if (purchasableItemsLength == 0) {
-				return;
+			if (purchasableItemsLength > 0) {
+				xPosition += slotWidth + 8;
+				string labelText = Language.GetTextValue(ValueIDPrefix + "ShopLabel");
+				ChatManager.DrawColorCodedStringWithShadow(Main.spriteBatch, Main.fontMouseText, labelText, new Vector2(xPosition, yPosition), Color.White, 0f, Vector2.Zero, Vector2.One, -1f, 2f);
+				yPosition -= slotHeight / 2;
+
+				// List all purchasable prefixes.
+				for (int i = 0; i < purchasableItemsLength; i++) {
+					yPosition += slotHeight + 8;
+
+					Item item = purchasableItems[i];
+					int buyCost = item.value * 2;
+					string price = FormatCoinCost(buyCost);
+
+					// Draw item slot containing the item with the purchasable prefix
+					ItemSlot.Draw(Main.spriteBatch, purchasableItems, ItemSlot.Context.CraftingMaterial, i, new Vector2(xPosition, yPosition), default);
+
+					// Draw the cost of the item
+					ChatManager.DrawColorCodedStringWithShadow(Main.spriteBatch, Main.fontMouseText, price, new Vector2(xPosition + slotWidth + 8, yPosition), Color.White, 0f, Vector2.Zero, Vector2.One, -1f, 2f);
+
+					// TODO: Investigate this re-assignment
+					purchasableItems[i] = item;
+
+					slotRectangle = new Rectangle((int) xPosition, (int) yPosition, slotWidth, slotHeight);
+					if (!slotRectangle.Contains(mousePoint)) {
+						continue;
+					}
+
+					Main.LocalPlayer.mouseInterface = true;
+					ItemSlot.MouseHover(purchasableItems, ItemSlot.Context.PrefixItem, i);
+
+					// Check if the player has clicked to buy the reforge AND can afford it.
+					if (Main.mouseItem.IsAir && Main.mouseLeftRelease && Main.mouseLeft && Main.player[Main.myPlayer].CanBuyItem(buyCost, -1)) {
+						Main.mouseLeft = false;
+						Main.mouseLeftRelease = false;
+
+						Main.player[Main.myPlayer].BuyItem(buyCost, -1);
+
+						item.favorited = player.ReforgeItem.favorited;
+						item.stack = player.ReforgeItem.stack;
+						item.position.X = Main.player[Main.myPlayer].position.X + (Main.player[Main.myPlayer].width / 2) - (item.width / 2);
+						item.position.Y = Main.player[Main.myPlayer].position.Y + (Main.player[Main.myPlayer].height / 2) - (item.height / 2);
+
+						Main.mouseItem = item;
+						player.ReforgeItem.TurnToAir();
+						ItemText.NewText(item, item.stack, noStack: true);
+						Main.PlaySound(SoundID.Item37);
+
+						ClearCurrentPrefixes();
+						// player.ReforgeItem = item;
+						// ClearCurrentPrefixes();
+						break;
+					}
+				}
 			}
 
-			xPosition += slotWidth + 8;
-			string labelText = Language.GetTextValue("Mods.GnomeWordsmith.ReforgeUI.ShopLabel");
-			ChatManager.DrawColorCodedStringWithShadow(Main.spriteBatch, Main.fontMouseText, labelText, new Vector2(xPosition, yPosition), Color.White, 0f, Vector2.Zero, Vector2.One, -1f, 2f);
-			yPosition -= slotHeight / 2;
-
-			// List all purchasable prefixes.
-			for (int i = 0; i < purchasableItemsLength; i++) {
-				yPosition += slotHeight + 8;
-
-				Item item = purchasableItems[i];
-				int buyCost = item.value * 2;
-				string price = FormatValue(buyCost);
-
-				ItemSlot.Draw(Main.spriteBatch, purchasableItems, ItemSlot.Context.CraftingMaterial, i, new Vector2(xPosition, yPosition), default(Color));
-				ChatManager.DrawColorCodedStringWithShadow(Main.spriteBatch, Main.fontMouseText, price, new Vector2(xPosition + slotWidth + 8, yPosition), Color.White, 0f, Vector2.Zero, Vector2.One, -1f, 2f);
-				purchasableItems[i] = item;
-
-				slotRectangle = new Rectangle((int) xPosition, (int) yPosition, slotWidth, slotHeight);
-				if (!slotRectangle.Contains(mousePoint)) {
-					continue;
-				}
-
-				Main.LocalPlayer.mouseInterface = true;
-				ItemSlot.MouseHover(purchasableItems, ItemSlot.Context.PrefixItem, i);
-
-				// Check if the player has clicked to buy the reforge AND can afford it.
-				if (!Main.mouseLeftRelease || !Main.mouseLeft || !Main.player[Main.myPlayer].CanBuyItem(buyCost, -1)) {
-					continue;
-				}
-
-				Main.mouseLeft = false;
-				Main.mouseLeftRelease = false;
-
-				Main.player[Main.myPlayer].BuyItem(buyCost, -1);
-
-				// Show text and play forge sound
-				ItemText.NewText(item, item.stack, true, false);
-				Main.PlaySound(SoundID.Item37);
-
-				/**
-				 * Place purchased item in the reforge slot, but Hide
-				 * all purchasable prefixes.
-				 */
-				gnomeWordsmithPlayer.ReforgeItem = item;
-				UpdateCurrentPrefixesForItem(null);
-				return;
-			}
+			base.Draw(spriteBatch);
 		}
 
 		// TODO: Move this to somewhere more appropriate?
-		public static string FormatValue(int value) {
+		public static string FormatCoinCost(int value) {
 			int copper = value;
 			int silver = 0;
 			int gold = 0;

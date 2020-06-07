@@ -1,27 +1,22 @@
-using GnomeWordsmith.UI;
+using DaesMod.Items;
+using DaesMod.UI;
 using Terraria;
 using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.Utilities;
 
-namespace GnomeWordsmith.NPCs {
+namespace DaesMod.NPCs {
 	[AutoloadHead]
-	public class GnomeWordsmithNPC : ModNPC {
-		public override string Texture {
-			get {
-				return "GnomeWordsmith/NPCs/GnomeWordsmithNPC";
-			}
-		}
+	public class GnomeTownie : ModNPC {
+		internal static string ValueIDPrefix = $"Mods.{nameof(DaesMod)}.{nameof(GnomeTownie)}.NPCChat.";
 
-		public override string[] AltTextures {
-			get {
-				return new string[] { "GnomeWordsmith/NPCs/GnomeWordsmithNPC_Party" };
-			}
-		}
+		public override string Texture => nameof(DaesMod) + "/NPCs/GnomeTownie";
+
+		public override string[] AltTextures => new string[] { nameof(DaesMod) + "/NPCs/GnomeTownie_Party" };
 
 		public override bool Autoload(ref string name) {
-			name = "GnomeWordsmith";
+			name = nameof(GnomeTownie);
 			return mod.Properties.Autoload;
 		}
 
@@ -86,21 +81,22 @@ namespace GnomeWordsmith.NPCs {
 		public override string GetChat() {
 			WeightedRandom<string> chat = new WeightedRandom<string>();
 
-			chat.Add(Language.GetTextValue("Mods.GnomeWordsmith.NPCChat.GnomeWordsmith.Rand0"));
-			chat.Add(Language.GetTextValue("Mods.GnomeWordsmith.NPCChat.GnomeWordsmith.Rand1"));
-			chat.Add(Language.GetTextValue("Mods.GnomeWordsmith.NPCChat.GnomeWordsmith.Rand2"));
+			chat.Add(Language.GetTextValue(ValueIDPrefix + "Rand0"));
+			chat.Add(Language.GetTextValue(ValueIDPrefix + "Rand1"));
+			chat.Add(Language.GetTextValue(ValueIDPrefix + "Rand2"));
+
 			int goblinkTinkerer = NPC.FindFirstNPC(NPCID.GoblinTinkerer);
 			if (goblinkTinkerer >= 0) {
-				chat.Add(Language.GetTextValue("Mods.GnomeWordsmith.NPCChat.GnomeWordsmith.GoblinTinkerer", Main.npc[goblinkTinkerer].GivenName));
+				chat.Add(Language.GetTextValue(ValueIDPrefix + "GoblinTinkerer", Main.npc[goblinkTinkerer].GivenName));
 			}
 
 			int steampunker = NPC.FindFirstNPC(NPCID.Steampunker);
 			if (steampunker >= 0) {
-				chat.Add(Language.GetTextValue("Mods.GnomeWordsmith.NPCChat.GnomeWordsmith.Steampunker", Main.npc[steampunker].GivenName));
+				chat.Add(Language.GetTextValue(ValueIDPrefix + "Steampunker", Main.npc[steampunker].GivenName));
 			}
 
 			if (Main.bloodMoon) {
-				chat.Add(Language.GetTextValue("Mods.GnomeWordsmith.NPCChat.GnomeWordsmith.BloodMoon"));
+				chat.Add(Language.GetTextValue(ValueIDPrefix + "BloodMoon"));
 			}
 
 			return chat.Get();
@@ -116,20 +112,14 @@ namespace GnomeWordsmith.NPCs {
 			if (firstButton) {
 				shop = true;
 			} else {
-				// TODO: Turn interface opening into a method?
-
-				// Close chat window
-				Main.playerInventory = true;
-				Main.npcChatText = "";
-				Main.PlaySound(SoundID.MenuTick);
-				ReforgeUI.visible = true;
+				ReforgeUI.ShowInterface();
 			}
 		}
 
 		// TODO: Add more "gnome-themed" items to shop.
 		public override void SetupShop(Chest shop, ref int nextSlot) {
-			shop.item[nextSlot++].SetDefaults(ItemID.FallenStar);
-			shop.item[nextSlot++].SetDefaults(mod.ItemType("PortableWormhole"));
+			shop.item[nextSlot++].SetDefaults(ModContent.ItemType<PortableWormhole>());
+			shop.item[nextSlot++].SetDefaults(ModContent.ItemType<AnomalyDetector>());
 		}
 
 		public override void TownNPCAttackStrength(ref int damage, ref float knockback) {
