@@ -5,7 +5,7 @@ Adds the Gnome Wordsmith Townie, which allows you to reforge items into a given 
   The Gnome Wordsmith will only join your town once both the Goblink Tinkerer and the Steampunker are present.
   Gnome Wordsmith sells the Portable Wormhole, which functions as a re-usable Wormhole potion, but will also let you teleport to Town NPCs.
   Gnome Wordsmith sells the Anomaly Detector, which highlights Corruption, Crimson, and Hallow akin to the Spelunker potion.
-![Image of Gnome Wordsmith's Head](NPCs/GnomeWordsmithNPC_Head.png)
+![Image of Gnome Wordsmith's Head](NPCs/GnomeTownie_Head.png)
 
 Adds the unlockable Endless Ammo Inventory. Craft at a Crystal Ball & Tinkerer Work Bench with an Endless Musket Pouch and an Endless Quiver.
   Endless Ammo Inventory unlocks the ability to convert crafted ammo into endless ammo.
@@ -21,4 +21,3 @@ Adds the unlockable Endless Ammo Inventory. Craft at a Crystal Ball & Tinkerer W
 - Add gamepad support. Currently a mouse is required to navigate the interfaces of this mod.
 - Add better support for interface scaling.
 - Add support for mod prefixes.
-- 
