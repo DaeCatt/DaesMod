@@ -12,7 +12,3 @@ GnomeTownie.NPCChat.BloodMoon=血月让每个人都紧张不安.要保持警惕.
 
 # UI Text
 ReforgeUI.ShopLabel=可定制重铸
-
-# Portable Wormhole
-ItemName.PortableWormhole=便携式虫洞
-ItemTooltip.PortableWormhole=传送到一个队友或城镇NPC\n在全屏地图上点击他们的头部

@@ -12,7 +12,3 @@ GnomeTownie.NPCChat.BloodMoon=The blood moon has put everyone on edge. Stay on y
 
 # UI Text
 ReforgeUI.ShopLabel=Smithable Prefixes
-
-# Portable Wormhole
-ItemName.PortableWormhole=Portable Wormhole
-ItemTooltip.PortableWormhole=Teleports you to a party member or Town NPC\nClick their head on the fullscreen map

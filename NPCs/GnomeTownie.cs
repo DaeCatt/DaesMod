@@ -118,7 +118,6 @@ namespace DaesMod.NPCs {
 
 		// TODO: Add more "gnome-themed" items to shop.
 		public override void SetupShop(Chest shop, ref int nextSlot) {
-			shop.item[nextSlot++].SetDefaults(ModContent.ItemType<PortableWormhole>());
 			shop.item[nextSlot++].SetDefaults(ModContent.ItemType<AnomalyDetector>());
 		}
 
